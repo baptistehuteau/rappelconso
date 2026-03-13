@@ -1,17 +1,32 @@
 import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
 
-st.title("Exemple bouton info")
+st.title("Répartition des catégories")
 
-if st.button("Info" \
-""):
-    st.info("Description : La listeria est un infection microbienne dûe à l ingestion de denrées alimentaires contaminée par la bactérie Listeria monocytogène." 
-            "/n Celle-ci se développe à rapidement à température ambiante mais est inhibée lorsqu elle est exposée à des températures faibles comme au frigo. Le seul moyen de détruire la bactérie est de faire cuire l'aliment à haute température au four ou à la poele." 
-            "/n Symptômes : " 
-"/n - forme digestive avec douleur abdominale, diharrée et symptôme grippale" 
-"- forme invasive avec infection du sang, ou du système nerveux central. Touche d avantage les personnes fragiles" 
-"- chez la femme enceinte : pas de conséquences ppour la mère, mais peut provoquer un avortement spontané, accouchement prématuré, ou mort foetale."
+# Upload du fichier
+uploaded_file = st.file_uploader("Importer le fichier Excel", type=["xlsx"])
 
-"Que faire en cas dingestion : " 
-"Aller chez le médecin pour un diagnostique"
+if uploaded_file:
 
-"https://www.pasteur.fr/fr/centre-medical/fiches-maladies/listeriose")
+    # Lire la feuille
+    df = pd.read_excel(uploaded_file, sheet_name="Tableau général")
+
+    # Remplir les catégories vides (car elles sont fusionnées dans Excel)
+    df["Type produit"] = df["Type produit"].ffill()
+
+    # Compter le nombre de lignes par catégorie
+    counts = df["Type produit"].value_counts()
+
+    # Supprimer les lignes de total si besoin
+    counts = counts[~counts.index.str.contains("Total|TOTAL", na=False)]
+
+    st.write("Nombre de lignes par catégorie :")
+    st.write(counts)
+
+    # Camembert
+    fig, ax = plt.subplots()
+    ax.pie(counts, labels=counts.index, autopct='%1.1f%%')
+    ax.set_title("Répartition des catégories")
+
+    st.pyplot(fig)
